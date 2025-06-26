@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Download, Plus, MapPin, Clock } from 'lucide-react';
+import { Calendar, Download, Plus, MapPin, Clock, Pencil } from 'lucide-react';
 import { generateConvocatoriaPDF } from '@/lib/pdf-generator';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,6 +25,7 @@ export function TenidasPanel() {
     type: '' as 'Conjunta' | 'Ordinaria' | 'Extraordinaria' | '',
     grade: '' as 'Aprendiz' | 'Compañero' | 'Maestro' | ''
   });
+  const [editTenida, setEditTenida] = useState<any | null>(null);
   const { toast } = useToast();
 
   // Leer tenidas desde Supabase
@@ -60,7 +61,7 @@ export function TenidasPanel() {
       return;
     }
 
-    // Insertar en Supabase
+    // No conviertas location a número, solo guarda el valor
     const { data, error } = await supabase
       .from('t357_meetings')
       .insert([{
@@ -76,7 +77,7 @@ export function TenidasPanel() {
     if (error) {
       toast({
         title: "Error",
-        description: "No se pudo crear la tenida",
+        description: error.message || "No se pudo crear la tenida",
         variant: "destructive"
       });
       return;
@@ -95,6 +96,47 @@ export function TenidasPanel() {
     toast({
       title: "Tenida creada",
       description: "La tenida ha sido programada exitosamente",
+    });
+  };
+
+  const handleEditTenida = async () => {
+    if (!editTenida.theme || !editTenida.date || !editTenida.location || !editTenida.type || !editTenida.grade) {
+      toast({
+        title: "Error",
+        description: "Por favor, completa todos los campos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('t357_meetings')
+      .update({
+        theme: editTenida.theme,
+        date: editTenida.date,
+        location: editTenida.location,
+        type: editTenida.type,
+        grade: editTenida.grade
+      })
+      .eq('id', editTenida.id)
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo editar la tenida",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setTenidas(tenidas.map(t => t.id === editTenida.id ? data : t));
+    setEditTenida(null);
+
+    toast({
+      title: "Tenida editada",
+      description: "La tenida ha sido actualizada exitosamente",
     });
   };
 
@@ -168,17 +210,15 @@ export function TenidasPanel() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="location">Lugar</Label>
-                <Input
-                  id="location"
-                  placeholder="Ubicación de la tenida"
-                  value={newTenida.location}
-                  onChange={(e) => setNewTenida({ ...newTenida, location: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="type">Tipo de Tenida</Label>
-                <Select value={newTenida.type} onValueChange={(value) => setNewTenida({ ...newTenida, type: value as any })}>
+                <Select
+                  value={newTenida.type}
+                  onValueChange={(value) => setNewTenida({
+                    ...newTenida,
+                    type: value as any,
+                    location: '' // Limpiar lugar al cambiar tipo
+                  })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
@@ -188,6 +228,33 @@ export function TenidasPanel() {
                     <SelectItem value="Conjunta">Conjunta</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="location">Lugar</Label>
+                {newTenida.type === "Conjunta" ? (
+                  <Input
+                    id="location"
+                    placeholder="Lugar de la tenida conjunta"
+                    value={newTenida.location}
+                    onChange={(e) => setNewTenida({ ...newTenida, location: e.target.value })}
+                  />
+                ) : (
+                  <Select
+                    value={newTenida.location}
+                    onValueChange={(value) => setNewTenida({ ...newTenida, location: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona la logia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {temples.map((temple: any) => (
+                        <SelectItem key={temple.id} value={String(temple.id)}>
+                          {temple.name} N°{temple.id}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="grade">Grado</Label>
@@ -209,6 +276,107 @@ export function TenidasPanel() {
               </Button>
               <Button onClick={handleCreateTenida}>
                 Crear Tenida
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de edición */}
+        <Dialog open={!!editTenida} onOpenChange={(open) => !open && setEditTenida(null)}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Editar Tenida</DialogTitle>
+              <DialogDescription>
+                Modifica los datos de la tenida
+              </DialogDescription>
+            </DialogHeader>
+            {editTenida && (
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="theme">Tema</Label>
+                  <Textarea
+                    id="theme"
+                    value={editTenida.theme}
+                    onChange={(e) => setEditTenida({ ...editTenida, theme: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Fecha</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={editTenida.date}
+                    onChange={(e) => setEditTenida({ ...editTenida, date: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="type">Tipo de Tenida</Label>
+                  <Select
+                    value={editTenida.type}
+                    onValueChange={(value) => setEditTenida({
+                      ...editTenida,
+                      type: value as any,
+                      location: '' // Limpiar lugar al cambiar tipo
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona el tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Ordinaria">Ordinaria</SelectItem>
+                      <SelectItem value="Extraordinaria">Extraordinaria</SelectItem>
+                      <SelectItem value="Conjunta">Conjunta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="location">Lugar</Label>
+                  {editTenida.type === "Conjunta" ? (
+                    <Input
+                      id="location"
+                      placeholder="Lugar de la tenida conjunta"
+                      value={editTenida.location}
+                      onChange={(e) => setEditTenida({ ...editTenida, location: e.target.value })}
+                    />
+                  ) : (
+                    <Select
+                      value={editTenida.location}
+                      onValueChange={(value) => setEditTenida({ ...editTenida, location: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona la logia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {temples.map((temple: any) => (
+                          <SelectItem key={temple.id} value={String(temple.id)}>
+                            {temple.name} N°{temple.id}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="grade">Grado</Label>
+                  <Select value={editTenida.grade} onValueChange={(value) => setEditTenida({ ...editTenida, grade: value as any })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona el grado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Aprendiz">Aprendiz</SelectItem>
+                      <SelectItem value="Compañero">Compañero</SelectItem>
+                      <SelectItem value="Maestro">Maestro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setEditTenida(null)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleEditTenida}>
+                Guardar Cambios
               </Button>
             </div>
           </DialogContent>
@@ -235,13 +403,22 @@ export function TenidasPanel() {
                       </Badge>
                     </div>
                   </div>
-                  <Button
-                    onClick={() => handleDownloadConvocatoria(tenida)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Descargar Convocatoria
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => handleDownloadConvocatoria(tenida)}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Descargar Convocatoria
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditTenida(tenida)}
+                    >
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Editar
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
