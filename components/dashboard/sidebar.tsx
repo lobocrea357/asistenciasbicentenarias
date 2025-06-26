@@ -50,8 +50,8 @@ export function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
             />
           </div>
           <div>
-            <h2 className="font-bold text-lg text-gray-800">Caballeros del Sol</h2>
-            <p className="text-sm text-gray-600">N° 669</p>
+            <h2 className="font-bold text-lg text-gray-800">Caballeros del Sol de Carabobo</h2>
+            <p className="text-sm text-gray-600">N° 269</p>
           </div>
         </div>
       </div>

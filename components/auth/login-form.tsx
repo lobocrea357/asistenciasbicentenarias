@@ -63,7 +63,7 @@ export function LoginForm({ onLogin }: LoginFormProps) {
               Bienvenido Hermano
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Resp∴ Log∴ Caballeros del Sol de Carabobo N° 669
+              Resp∴ Log∴ Caballeros del Sol de Carabobo N° 269
             </CardDescription>
           </CardHeader>
           <CardContent>
