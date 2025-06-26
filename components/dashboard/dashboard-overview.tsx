@@ -1,26 +1,64 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, UserCheck, TrendingUp } from 'lucide-react';
-import { mockBrothers, mockTenidas } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export function DashboardOverview() {
-  const totalBrothers = mockBrothers.length;
-  const totalTenidas = mockTenidas.length;
-  const averageAttendance = Math.round(
-    mockBrothers.reduce((acc, brother) => acc + (brother.totalAttendances / brother.totalSessions * 100), 0) / totalBrothers
-  );
-  
-  const gradeDistribution = mockBrothers.reduce((acc, brother) => {
+  const [brothers, setBrothers] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [attendanceSummary, setAttendanceSummary] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const { data: brothersData } = await supabase.from('t357_brothers').select('*');
+      const { data: meetingsData } = await supabase.from('t357_meetings').select('*');
+      // Asume que tienes la función RPC para el resumen de asistencias
+      const { data: attendanceData } = await supabase.rpc('get_brother_attendance_summary');
+      setBrothers(brothersData || []);
+      setMeetings(meetingsData || []);
+      setAttendanceSummary(attendanceData || []);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  const totalBrothers = brothers.length;
+  const totalTenidas = meetings.length;
+
+  // Calcula asistencia promedio real
+  const averageAttendance = attendanceSummary.length
+    ? Math.round(
+        attendanceSummary.reduce(
+          (acc, brother) =>
+            acc +
+            (brother.total_sessions && brother.total_sessions > 0
+              ? (brother.total_attendances / brother.total_sessions) * 100
+              : 0),
+          0
+        ) / attendanceSummary.length
+      )
+    : 0;
+
+  // Distribución por grado real
+  const gradeDistribution = brothers.reduce((acc, brother) => {
     acc[brother.grade] = (acc[brother.grade] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const upcomingTenidas = mockTenidas
+  // Próximas tenidas reales
+  const upcomingTenidas = meetings
     .filter(tenida => new Date(tenida.date) > new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     .slice(0, 3);
+
+  if (loading) {
+    return <div className="p-8 text-center">Cargando...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -97,7 +135,7 @@ export function DashboardOverview() {
                     <span className="text-sm text-gray-600">{count} hermanos</span>
                   </div>
                   <div className="text-sm font-medium">
-                    {Math.round((count / totalBrothers) * 100)}%
+                    {totalBrothers > 0 ? Math.round((count / totalBrothers) * 100) : 0}%
                   </div>
                 </div>
               ))}
