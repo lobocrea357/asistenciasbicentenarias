@@ -41,7 +41,7 @@ export function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
     <div className="flex flex-col h-full">
       <div className="p-6 border-b">
         <div className="flex items-center space-x-3">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-yellow-400">
+          <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-yellow-400">
             <Image
               src="/image_2025-06-26_102007168.png"
               alt="Logo Logia"
