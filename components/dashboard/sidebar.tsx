@@ -49,8 +49,8 @@ export function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
               className="object-cover"
             />
           </div>
-          <div>
-            <h2 className="font-bold text-lg text-gray-800">Caballeros del Sol de Carabobo</h2>
+          <div className=''>
+            <h2 className="font-bold text-lg text-gray-800">Caballeros <br />del Sol de<br /> Carabobo</h2>
             <p className="text-sm text-gray-600">N° 269</p>
           </div>
         </div>
