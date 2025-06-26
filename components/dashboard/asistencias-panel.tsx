@@ -1,28 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { UserCheck, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { mockBrothers, Brother } from '@/lib/data';
+import { supabase } from '@/lib/supabase';
 
 export function AsistenciasPanel() {
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
-  
-  const filteredBrothers = selectedGrade === 'all' 
-    ? mockBrothers 
-    : mockBrothers.filter(brother => brother.grade === selectedGrade);
+  const [attendanceSummary, setAttendanceSummary] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const totalAttendanceRate = Math.round(
-    filteredBrothers.reduce((acc, brother) => acc + (brother.totalAttendances / brother.totalSessions * 100), 0) / filteredBrothers.length
-  );
+  useEffect(() => {
+    const fetchAttendanceSummary = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.rpc('get_brother_attendance_summary');
+      if (error) {
+        console.error('Error calling RPC function:', error);
+        setAttendanceSummary([]);
+      } else {
+        setAttendanceSummary(data || []);
+      }
+      setLoading(false);
+    };
+    fetchAttendanceSummary();
+  }, []);
 
-  const gradeAttendanceRate = Math.round(
-    filteredBrothers.reduce((acc, brother) => acc + (brother.gradeAttendances / brother.gradeSessions * 100), 0) / filteredBrothers.length
-  );
+  const filteredData = selectedGrade === 'all'
+    ? attendanceSummary
+    : attendanceSummary.filter(b => b.brother_grade === selectedGrade);
+
+  // Calcula promedios generales para los summary cards
+  const totalAttendanceRate = filteredData.length
+    ? Math.round(
+        filteredData.reduce((acc, b) => acc + (b.total_sessions ? (b.total_attendances / b.total_sessions) * 100 : 0), 0) /
+        filteredData.length
+      )
+    : 0;
+
+  const gradeAttendanceRate = filteredData.length
+    ? Math.round(
+        filteredData.reduce((acc, b) => acc + (b.grade_sessions ? (b.grade_attendances / b.grade_sessions) * 100 : 0), 0) /
+        filteredData.length
+      )
+    : 0;
 
   const getAttendanceColor = (rate: number) => {
     if (rate >= 80) return 'text-green-600';
@@ -44,6 +68,8 @@ export function AsistenciasPanel() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) return <div className="p-8 text-center">Cargando...</div>;
 
   return (
     <div className="space-y-6">
@@ -73,7 +99,7 @@ export function AsistenciasPanel() {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredBrothers.length}</div>
+            <div className="text-2xl font-bold">{filteredData.length}</div>
             <p className="text-xs text-muted-foreground">
               {selectedGrade === 'all' ? 'Total' : `Grado ${selectedGrade}`}
             </p>
@@ -130,23 +156,26 @@ export function AsistenciasPanel() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredBrothers.map((brother) => {
-                  const totalRate = Math.round((brother.totalAttendances / brother.totalSessions) * 100);
-                  const gradeRate = Math.round((brother.gradeAttendances / brother.gradeSessions) * 100);
-                  
+                {filteredData.map((brother) => {
+                  // Si tu función RPC no retorna total_sessions, puedes calcularlo o agregarlo en el SQL
+                  const totalSessions = brother.total_sessions || 0; // Cambia esto si agregas el campo
+                  const gradeSessions = brother.grade_sessions || 0;
+                  const totalRate = totalSessions ? Math.round((brother.total_attendances / totalSessions) * 100) : 0;
+                  const gradeRate = gradeSessions ? Math.round((brother.grade_attendances / gradeSessions) * 100) : 0;
+
                   return (
-                    <TableRow key={brother.id}>
-                      <TableCell className="font-medium">{brother.name}</TableCell>
+                    <TableRow key={brother.brother_id}>
+                      <TableCell className="font-medium">{brother.brother_name}</TableCell>
                       <TableCell>
-                        <Badge className={getGradeBadgeColor(brother.grade)}>
-                          {brother.grade}
+                        <Badge className={getGradeBadgeColor(brother.brother_grade)}>
+                          {brother.brother_grade}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-gray-600">{brother.position}</TableCell>
+                      <TableCell className="text-sm text-gray-600">{brother.brother_position || '-'}</TableCell>
                       <TableCell>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span>{brother.totalAttendances}/{brother.totalSessions}</span>
+                            <span>{brother.total_attendances}/{totalSessions}</span>
                             <span className={getAttendanceColor(totalRate)}>{totalRate}%</span>
                           </div>
                           <Progress value={totalRate} className="h-2" />
@@ -155,7 +184,7 @@ export function AsistenciasPanel() {
                       <TableCell>
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
-                            <span>{brother.gradeAttendances}/{brother.gradeSessions}</span>
+                            <span>{brother.grade_attendances}/{gradeSessions}</span>
                             <span className={getAttendanceColor(gradeRate)}>{gradeRate}%</span>
                           </div>
                           <Progress value={gradeRate} className="h-2" />

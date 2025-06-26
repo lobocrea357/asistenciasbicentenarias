@@ -1,4 +1,4 @@
-'use client';
+
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -417,6 +417,12 @@ export function TenidasPanel() {
                     >
                       <Pencil className="mr-2 h-4 w-4" />
                       Editar
+                    </Button>
+                    <Button
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                      onClick={() => window.location.href = `/asistencias/${tenida.id}`}
+                    >
+                      Asistencias
                     </Button>
                   </div>
                 </div>
