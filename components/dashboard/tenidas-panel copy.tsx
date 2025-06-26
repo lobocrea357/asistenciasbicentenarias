@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,12 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar, Download, Plus, MapPin, Clock } from 'lucide-react';
+import { mockTenidas, Tenida } from '@/lib/data';
 import { generateConvocatoriaPDF } from '@/lib/pdf-generator';
 import { useToast } from '@/hooks/use-toast';
 
 export function TenidasPanel() {
-  const [tenidas, setTenidas] = useState<any[]>([]);
-  const [temples, setTemples] = useState<any[]>([]); // <-- Agrega este estado
+  const [tenidas, setTenidas] = useState<Tenida[]>(mockTenidas);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTenida, setNewTenida] = useState({
     theme: '',
@@ -27,30 +26,7 @@ export function TenidasPanel() {
   });
   const { toast } = useToast();
 
-  // Leer tenidas desde Supabase
-  useEffect(() => {
-    const fetchTenidas = async () => {
-      const { data, error } = await supabase
-        .from('t357_meetings')
-        .select('*')
-        .order('date', { ascending: false });
-      if (!error) setTenidas(data || []);
-    };
-    fetchTenidas();
-  }, []);
-
-  // Leer templos desde Supabase
-  useEffect(() => {
-    const fetchTemples = async () => {
-      const { data, error } = await supabase
-        .from('t357_temples')
-        .select('*');
-      if (!error) setTemples(data || []);
-    };
-    fetchTemples();
-  }, []);
-
-  const handleCreateTenida = async () => {
+  const handleCreateTenida = () => {
     if (!newTenida.theme || !newTenida.date || !newTenida.location || !newTenida.type || !newTenida.grade) {
       toast({
         title: "Error",
@@ -60,29 +36,17 @@ export function TenidasPanel() {
       return;
     }
 
-    // Insertar en Supabase
-    const { data, error } = await supabase
-      .from('t357_meetings')
-      .insert([{
-        theme: newTenida.theme,
-        date: newTenida.date,
-        location: newTenida.location,
-        type: newTenida.type,
-        grade: newTenida.grade
-      }])
-      .select()
-      .single();
+    const tenida: Tenida = {
+      id: Date.now().toString(),
+      theme: newTenida.theme,
+      date: newTenida.date,
+      location: newTenida.location,
+      type: newTenida.type as 'Conjunta' | 'Ordinaria' | 'Extraordinaria',
+      grade: newTenida.grade as 'Aprendiz' | 'Compañero' | 'Maestro',
+      createdAt: new Date().toISOString().split('T')[0]
+    };
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "No se pudo crear la tenida",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setTenidas([data, ...tenidas]);
+    setTenidas([...tenidas, tenida]);
     setNewTenida({
       theme: '',
       date: '',
@@ -91,18 +55,15 @@ export function TenidasPanel() {
       grade: ''
     });
     setIsDialogOpen(false);
-
+    
     toast({
       title: "Tenida creada",
       description: "La tenida ha sido programada exitosamente",
     });
   };
 
-  const handleDownloadConvocatoria = (tenida: any) => {
-    // Busca el templo por el número guardado en location
-    const temple = temples.find(t => String(t.id) === String(tenida.location));
-    const templeName = temple ? `${temple.name} N°${temple.id}` : tenida.location;
-    generateConvocatoriaPDF(tenida, templeName);
+  const handleDownloadConvocatoria = (tenida: Tenida) => {
+    generateConvocatoriaPDF(tenida);
     toast({
       title: "Convocatoria generada",
       description: "El PDF ha sido descargado exitosamente",
@@ -216,61 +177,56 @@ export function TenidasPanel() {
       </div>
 
       <div className="grid gap-6">
-        {tenidas.map((tenida) => {
-          // Busca el templo por el número guardado en location
-          const temple = temples.find(t => String(t.id) === String(tenida.location));
-          const templeName = temple ? `${temple.name} N°${temple.id}` : tenida.location;
-          return (
-            <Card key={tenida.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{tenida.theme}</CardTitle>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <Badge className={getTypeColor(tenida.type)}>
-                        {tenida.type}
-                      </Badge>
-                      <Badge className={getGradeColor(tenida.grade)}>
-                        {tenida.grade}
-                      </Badge>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleDownloadConvocatoria(tenida)}
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Descargar Convocatoria
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-blue-500" />
-                    <span className="text-gray-600">
-                      {new Date(tenida.date).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-green-500" />
-                    <span className="text-gray-600">{templeName}</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-purple-500" />
-                    <span className="text-gray-600">
-                      Creada: {tenida.created_at ? new Date(tenida.created_at).toLocaleDateString('es-ES') : ''}
-                    </span>
+        {tenidas.map((tenida) => (
+          <Card key={tenida.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <CardTitle className="text-lg mb-2">{tenida.theme}</CardTitle>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    <Badge className={getTypeColor(tenida.type)}>
+                      {tenida.type}
+                    </Badge>
+                    <Badge className={getGradeColor(tenida.grade)}>
+                      {tenida.grade}
+                    </Badge>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                <Button
+                  onClick={() => handleDownloadConvocatoria(tenida)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Descargar Convocatoria
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-blue-500" />
+                  <span className="text-gray-600">
+                    {new Date(tenida.date).toLocaleDateString('es-ES', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-4 w-4 text-green-500" />
+                  <span className="text-gray-600">{tenida.location}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-purple-500" />
+                  <span className="text-gray-600">
+                    Creada: {new Date(tenida.createdAt).toLocaleDateString('es-ES')}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
