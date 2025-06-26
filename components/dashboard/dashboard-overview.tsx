@@ -123,22 +123,35 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(gradeDistribution).map(([grade, count]) => (
-                <div key={grade} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Badge 
-                      variant={grade === 'Maestro' ? 'default' : grade === 'Compañero' ? 'secondary' : 'outline'}
-                      className="w-20 justify-center"
-                    >
-                      {grade}
-                    </Badge>
-                    <span className="text-sm text-gray-600">{count} hermanos</span>
+              {Object.entries(gradeDistribution).map(([grade, count]) => {
+                const countNumber = count as number;
+                return (
+                  <div key={grade || 'sin-grado'} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant={
+                          grade === 'Maestro'
+                            ? 'default'
+                            : grade === 'Compañero'
+                            ? 'secondary'
+                            : 'outline'
+                        }
+                        className="w-20 justify-center"
+                      >
+                        {grade || 'Sin grado'}
+                      </Badge>
+                      <span className="text-sm text-gray-600">
+                        {countNumber} {countNumber === 1 ? 'hermano' : 'hermanos'}
+                      </span>
+                    </div>
+                    <div className="text-sm font-medium">
+                      {totalBrothers > 0
+                        ? `${Math.round((countNumber / totalBrothers) * 100)}%`
+                        : '0%'}
+                    </div>
                   </div>
-                  <div className="text-sm font-medium">
-                    {totalBrothers > 0 ? Math.round((count / totalBrothers) * 100) : 0}%
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
