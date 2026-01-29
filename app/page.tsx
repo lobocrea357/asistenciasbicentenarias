@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { LoginForm } from '@/components/auth/login-form';
 import { Sidebar } from '@/components/dashboard/sidebar';
+import { GlobalSearch } from '@/components/dashboard/global-search';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { TenidasPanel } from '@/components/dashboard/tenidas-panel';
 import { AsistenciasPanel } from '@/components/dashboard/asistencias-panel';
 import { HermanosPanel } from '@/components/dashboard/hermanos-panel';
+import { CuadroLogialPanel } from '@/components/dashboard/cuadro-logial-panel';
 import { Toaster } from '@/components/ui/toaster';
 import { Loader2 } from 'lucide-react';
 
@@ -69,6 +71,8 @@ export default function Home() {
         return <AsistenciasPanel />;
       case 'hermanos':
         return <HermanosPanel />;
+      case 'cuadro-logial':
+        return <CuadroLogialPanel />;
       default:
         return <DashboardOverview />;
     }
@@ -76,12 +80,12 @@ export default function Home() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar 
-        activeTab={activeTab} 
-        onTabChange={setActiveTab} 
+      <Sidebar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
         onLogout={handleLogout}
       />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
         <div className="p-6 lg:p-8 pt-16 lg:pt-6">
           {renderActivePanel()}
         </div>

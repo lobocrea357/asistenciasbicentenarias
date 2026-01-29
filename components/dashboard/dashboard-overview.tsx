@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, UserCheck, TrendingUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export function DashboardOverview() {
   const [brothers, setBrothers] = useState<any[]>([]);
@@ -33,15 +34,15 @@ export function DashboardOverview() {
   // Calcula asistencia promedio real
   const averageAttendance = attendanceSummary.length
     ? Math.round(
-        attendanceSummary.reduce(
-          (acc, brother) =>
-            acc +
-            (brother.total_sessions && brother.total_sessions > 0
-              ? (brother.total_attendances / brother.total_sessions) * 100
-              : 0),
-          0
-        ) / attendanceSummary.length
-      )
+      attendanceSummary.reduce(
+        (acc, brother) =>
+          acc +
+          (brother.total_sessions && brother.total_sessions > 0
+            ? (brother.total_attendances / brother.total_sessions) * 100
+            : 0),
+        0
+      ) / attendanceSummary.length
+    )
     : 0;
 
   // Distribución por grado real
@@ -63,8 +64,8 @@ export function DashboardOverview() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Bienvenido al sistema de gestión de la Logia</p>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">Bienvenido al sistema de gestión de la Logia</p>
       </div>
 
       {/* Stats Cards */}
@@ -115,44 +116,36 @@ export function DashboardOverview() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Grade Distribution */}
+        {/* Grade Distribution Chart */}
         <Card>
           <CardHeader>
             <CardTitle>Distribución por Grados</CardTitle>
             <CardDescription>Composición actual de la Logia</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {Object.entries(gradeDistribution).map(([grade, count]) => {
-                const countNumber = count as number;
-                return (
-                  <div key={grade || 'sin-grado'} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant={
-                          grade === 'Maestro'
-                            ? 'default'
-                            : grade === 'Compañero'
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                        className="w-20 justify-center"
-                      >
-                        {grade || 'Sin grado'}
-                      </Badge>
-                      <span className="text-sm text-gray-600">
-                        {countNumber} {countNumber === 1 ? 'hermano' : 'hermanos'}
-                      </span>
-                    </div>
-                    <div className="text-sm font-medium">
-                      {totalBrothers > 0
-                        ? `${Math.round((countNumber / totalBrothers) * 100)}%`
-                        : '0%'}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={Object.entries(gradeDistribution).map(([grade, count]) => ({
+                grade: grade || 'Sin grado',
+                hermanos: count as number
+              }))}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="grade" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="hermanos" radius={[8, 8, 0, 0]}>
+                  {Object.entries(gradeDistribution).map(([grade], index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        grade === 'Maestro' ? '#9333ea' :
+                          grade === 'Compañero' ? '#eab308' :
+                            '#f97316'
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 

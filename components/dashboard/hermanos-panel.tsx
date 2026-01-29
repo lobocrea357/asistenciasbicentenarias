@@ -9,7 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Filter, Users, Crown, Award, Star } from 'lucide-react';
+import { Search, Filter, Users, Crown, Award, Star, FileDown } from 'lucide-react';
+import { exportBrothersToPDF, exportBrothersToExcel } from '@/lib/export-utils';
+import { ImportBrothersDialog } from './import-brothers-dialog';
 
 export function HermanosPanel() {
   const [brothers, setBrothers] = useState<any[]>([]);
@@ -21,21 +23,22 @@ export function HermanosPanel() {
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
 
   // Cargar hermanos y posiciones
+  const fetchData = async () => {
+    const { data: brothersData } = await supabase
+      .from('t357_brothers')
+      .select('*, t357_positions(name)')
+      .order('name', { ascending: true });
+
+    const { data: positionsData } = await supabase
+      .from('t357_positions')
+      .select('*')
+      .order('name', { ascending: true });
+
+    setBrothers(brothersData || []);
+    setPositions(positionsData || []);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: brothersData } = await supabase
-        .from('t357_brothers')
-        .select('*, t357_positions(name)')
-        .order('name', { ascending: true });
-
-      const { data: positionsData } = await supabase
-        .from('t357_positions')
-        .select('*')
-        .order('name', { ascending: true });
-
-      setBrothers(brothersData || []);
-      setPositions(positionsData || []);
-    };
     fetchData();
   }, []);
 
@@ -100,7 +103,7 @@ export function HermanosPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Queridos Hermanos</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Queridos Hermanos</h1>
         <p className="text-gray-600 mt-2">Directorio de miembros de la Logia</p>
       </div>
 
@@ -136,8 +139,37 @@ export function HermanosPanel() {
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Directorio de Hermanos</CardTitle>
-          <CardDescription>Lista completa de miembros con sus grados y cargos</CardDescription>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <CardTitle>Directorio de Hermanos</CardTitle>
+              <CardDescription>Lista completa de miembros con sus grados y cargos</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <ImportBrothersDialog onImportComplete={fetchData} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportBrothersToPDF(filteredBrothers.map(b => ({
+                  ...b,
+                  position_name: b.t357_positions?.name
+                })))}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => exportBrothersToExcel(filteredBrothers.map(b => ({
+                  ...b,
+                  position_name: b.t357_positions?.name
+                })))}
+              >
+                <FileDown className="h-4 w-4 mr-2" />
+                Excel
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -184,7 +216,7 @@ export function HermanosPanel() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium text-gray-900">{brother.name}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{brother.name}</div>
                         </div>
                       </div>
                     </TableCell>
