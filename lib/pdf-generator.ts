@@ -118,8 +118,17 @@ export const generateConvocatoriaPDF = (tenida: Tenida, templeName: string) => {
   );
 
   // Firmas
+  // Firma del VM (Gerardo)
+  const firmaVMImg = new Image();
+  firmaVMImg.src = '/firma-vm.png';
+  doc.addImage(firmaVMImg, 'PNG', 80, 620, 60, 25, undefined, 'FAST');
   doc.text('Geison Saul Barreto Marcano', 80, 650);
   doc.text(tripunteadoAColonPunto('V∴ M∴'), 80, 665);
+  
+  // Firma del Secretario (Luis David)
+  const firmaSecImg = new Image();
+  firmaSecImg.src = '/firma-sec.png';
+  doc.addImage(firmaSecImg, 'PNG', width - 220, 620, 60, 25, undefined, 'FAST');
   doc.text('Rafael Enrique Cobeña Piñero', width - 220, 650);
   doc.text(tripunteadoAColonPunto('Sec∴ G∴ SS∴ y TT∴'), width - 220, 665);
 
