@@ -36,7 +36,9 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   const contentWidth = pageWidth - (margin * 2);
 
   // 2. Encabezados
-  doc.text("A L:. G:. D:. G:. A:. D:.U:. ( L:.L:.F:.", centerX, yPos, { align: "center" });
+  doc.text("A L:. G:. D:. G:. A:. D:.U:.", centerX, yPos, { align: "center" });
+  yPos += 5;
+  doc.text("(L:.L:.F:.)", centerX, yPos, { align: "center" });
   yPos += 7;
 
   doc.text(`Resp:. Log:. Caballeros Del Sol de Carabobo N°269 Instalada el 23 de abril de 2022 (E:.V:.)`, centerX, yPos, { align: "center" });
@@ -89,7 +91,11 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   yPos += 7;
   doc.setFont("times", "normal");
   const tema = tenida.theme || "El Gran Incendio de Londres";
-  doc.text(tema, margin, yPos);
+  const temaLines = doc.splitTextToSize(tema, contentWidth);
+  temaLines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 5;
+  });
   yPos += 7;
   doc.text("El acostumbrado toque de puertas comenzará a las 5:00p.m. en punto.", margin, yPos);
   yPos += 15;
