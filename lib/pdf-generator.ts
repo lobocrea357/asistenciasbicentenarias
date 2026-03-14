@@ -73,7 +73,7 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   const tenidaDate = new Date(tenida.date + 'T00:00:00');
   const tenidaDateStr = tenidaDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const bodyText = `Convocatoria: De parte del V:.M:. Gerardo Enrique Pena Barrera y su cuadro logial, se os convoca para el proximo ${tenidaDateStr} del presente año, a una Tenida ${tenida.type} en el Grado de ${tenida.grade} comenzara a las 06:30 p m (En punto) en nuestro templo ubicado en la Urb. Campo Alegre, calle el parque Casa n° 112- A- 25 Al Or:. de Valencia Edo. Carabobo.`;
+  const bodyText = `Convocatoria: De parte del V:.M:. Gerardo Enrique Pena Barrera y su cuadro logial, se os convoca para el proximo ${tenidaDateStr}, a una Tenida ${tenida.type} en el Grado de ${tenida.grade} comenzara a las 06:30 p m (En punto) en nuestro templo ubicado en la Urb. Campo Alegre, calle el parque Casa n° 112- A- 25 Al Or:. de Valencia Edo. Carabobo.`;
 
   const bodyLines = doc.splitTextToSize(bodyText, contentWidth);
   bodyLines.forEach((line: string) => {
@@ -90,6 +90,8 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   doc.setFont("times", "normal");
   const tema = tenida.theme || "El Gran Incendio de Londres";
   doc.text(tema, margin, yPos);
+  yPos += 7;
+  doc.text("El acostumbrado toque de puertas comenzará a las 5:00p.m. en punto.", margin, yPos);
   yPos += 15;
 
   // 7. Cierre
