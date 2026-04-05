@@ -12,6 +12,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, Filter, Users, Crown, Award, Star, FileDown } from 'lucide-react';
 import { exportBrothersToPDF, exportBrothersToExcel } from '@/lib/export-utils';
 import { ImportBrothersDialog } from './import-brothers-dialog';
+import { generateNiEntreDichoNiPenado } from '@/lib/pdf-generator';
+import { Brother } from '@/lib/data';
+
 
 export function HermanosPanel() {
   const [brothers, setBrothers] = useState<any[]>([]);
@@ -80,6 +83,16 @@ export function HermanosPanel() {
     grade,
     count: brothers.filter(b => b.grade === grade).length,
   }));
+
+  const handleDownloadNiEntreDichoNiPenado = async (brother: Brother) => {
+    // Implementación futura
+
+    const vm = brothers.find(b => b.position_id === 1);
+    
+    console.log(brothers);
+
+
+  };
 
   // Utilidades visuales (puedes mantener las que ya tienes)
   const getGradeBadgeColor = (grade: string) => {
@@ -257,12 +270,16 @@ export function HermanosPanel() {
                     </TableCell>
                     <TableCell>
                       {editingId === brother.id ? (
-                        <>
+                        <div className="flex gap-2">
                           <Button size="sm" onClick={() => saveEdit(brother.id)}>Guardar</Button>
                           <Button size="sm" variant="outline" onClick={cancelEdit}>Cancelar</Button>
-                        </>
+                        </div>
                       ) : (
-                        <Button size="sm" variant="outline" onClick={() => startEdit(brother)}>Editar</Button>
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(brother)}>Editar</Button>
+                          <Button size="sm" variant="outline" className='bg-emerald-800 text-white' onClick={() => handleDownloadNiEntreDichoNiPenado(brother)}>No entre dicho ni penado</Button>
+                          <Button size="sm" variant="outline" className='bg-blue-600 text-white'>Cambiar Estatus</Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

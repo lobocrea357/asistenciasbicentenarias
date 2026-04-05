@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { Tenida } from './data';
+import { Brother, Tenida } from './data';
 
 const loadImage = (src: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
@@ -128,4 +128,123 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   doc.text("Sec:. G:. SS:. y TT:.", col2X, yPos, { align: "center" });
 
   doc.save(`Convocatoria_${tenida.date}.pdf`);
+};
+
+
+
+export const generateNiEntreDichoNiPenado = async (brother: Brother, secretary: Brother, vm: Brother, fiscalSpeaker: Brother) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const centerX = pageWidth / 2;
+  const margin = 20;
+  const contentWidth = pageWidth - (margin * 2);
+
+  const currentDate = new Date();
+  const months = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre'
+  ];
+
+  const dateLiteral = `${currentDate.getDate()} de ${months[currentDate.getMonth()]} de ${currentDate.getFullYear()}`;
+  const brotherCedulaRaw = (brother as Brother & { cedula?: string | number }).cedula;
+  const brotherCedula = brotherCedulaRaw
+    ? Number(String(brotherCedulaRaw).replace(/[^\d]/g, '')).toLocaleString('es-VE')
+    : '____________';
+
+  try {
+    const logo = await loadImage('/image_2025-06-26_102007168.png');
+    const logoWidth = 24;
+    const logoHeight = (logo.height * logoWidth) / logo.width;
+    doc.addImage(logo, 'PNG', centerX - (logoWidth / 2), 10, logoWidth, logoHeight);
+  } catch (error) {
+    console.error('Error cargando logo del documento', error);
+  }
+
+  let yPos = 40;
+
+  doc.setFont('times', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(22, 56, 122);
+  doc.text('A L:. G:. D:. G:. A:. D:. U:.', centerX, yPos, { align: 'center' });
+  yPos += 6;
+  doc.text('L:. L:. F:.', centerX, yPos, { align: 'center' });
+  yPos += 6;
+  doc.text('Resp:. Log:. Caballeros del Sol de Carabobo N° 269 Instalada el 21 de abril de 2.022 (e:. v:.)', centerX, yPos, { align: 'center' });
+  yPos += 5;
+  doc.text('Bajo los auspicios de la Muy Resp:. Gr:. Log:. de la República de Venezuela de Jesuitas a Maturín N°5', centerX, yPos, { align: 'center' });
+  yPos += 5;
+  doc.text('R:. E:. A:. A:.', centerX, yPos, { align: 'center' });
+
+  yPos += 12;
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('times', 'normal');
+  doc.setFontSize(12);
+  doc.text(`Or:. de Valencia, ${dateLiteral} (e:. v:.)`, margin, yPos);
+
+  yPos += 10;
+  doc.text('A todos los QQ:. HH:. que la presente vieren.', margin, yPos);
+
+  yPos += 14;
+  doc.setFont('times', 'bold');
+  doc.text('S:. F:. U:.', centerX, yPos, { align: 'center' });
+
+  yPos += 12;
+  doc.setFont('times', 'normal');
+  const bodyText = `En nombre de la Respetable Logia Caballeros del Sol de Carabobo N° 269 se hace constar que nuestro Q:. H:. ${brother.name.toUpperCase()}, cédula de identidad V-${brotherCedula} y miembro activo de este Respetable Taller se encuentra libre de cualquier proceso administrativo y no se encuentra NI ENTRE DICHO NI PENADO, permaneciendo con una labor en Logia encomiable de su título masónico.`;
+  const bodyLines = doc.splitTextToSize(bodyText, contentWidth);
+  bodyLines.forEach((line: string) => {
+    doc.text(line, margin, yPos);
+    yPos += 7.5;
+  });
+
+  const vmSignatureY = Math.max(yPos + 14, 184);
+  try {
+    const vmSignature = await loadImage('/firma-vm.png');
+    doc.addImage(vmSignature, 'PNG', centerX - 22, vmSignatureY - 16, 44, 18, undefined, 'FAST');
+  } catch (error) {
+    console.error('Error cargando firma del VM', error);
+  }
+
+  doc.setFont('times', 'normal');
+  doc.setFontSize(11);
+  doc.text(vm.name, centerX, vmSignatureY + 6, { align: 'center' });
+  doc.setFont('times', 'bold');
+  doc.text('V:.M:.', centerX, vmSignatureY + 12, { align: 'center' });
+
+  const bottomSignY = 240;
+  const leftX = pageWidth / 4;
+  const rightX = (pageWidth * 3) / 4;
+
+  try {
+    const secSignature = await loadImage('/firma-sec.png');
+    doc.addImage(secSignature, 'PNG', leftX - 20, bottomSignY - 20, 40, 18, undefined, 'FAST');
+  } catch (error) {
+    console.error('Error cargando firma del secretario', error);
+  }
+
+  doc.setFont('times', 'bold');
+  doc.text(secretary.name, leftX, bottomSignY + 6, { align: 'center' });
+  doc.text('Sec:. GG:. SS:. y TT:.', leftX, bottomSignY + 12, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.text('_________________________', rightX, bottomSignY, { align: 'center' });
+  doc.setFont('times', 'bold');
+  doc.text(fiscalSpeaker.name, rightX, bottomSignY + 6, { align: 'center' });
+  doc.text('Or:. Fiscal', rightX, bottomSignY + 12, { align: 'center' });
+
+  const safeName = brother.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  doc.save(`Ni_Entre_Dicho_Ni_Penado_${safeName || 'hermano'}.pdf`);
 };
