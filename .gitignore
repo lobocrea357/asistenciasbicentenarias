@@ -28,6 +28,10 @@ yarn-error.log*
 .env
 .env*.local
 
+# windsurf / cascade
+.windsurf/
+.agents/
+
 # vercel
 .vercel
 
