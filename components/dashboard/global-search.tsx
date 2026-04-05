@@ -28,14 +28,14 @@ export function GlobalSearch({ onSelectBrother, onSelectTenida }: GlobalSearchPr
         const searchData = async () => {
             // Buscar hermanos
             const { data: brothersData } = await supabase
-                .from('t357_brothers')
+                .from('brothers')
                 .select('*')
                 .or(`name.ilike.%${query}%,cedula.ilike.%${query}%`)
                 .limit(5);
 
             // Buscar tenidas
             const { data: tenidasData } = await supabase
-                .from('t357_meetings')
+                .from('meetings')
                 .select('*')
                 .ilike('theme', `%${query}%`)
                 .limit(5);

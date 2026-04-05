@@ -28,8 +28,8 @@ export function PositionHistoryDialog({ positionId, positionName }: PositionHist
 
         // Intentar obtener historial de la tabla (si existe)
         const { data, error } = await supabase
-            .from('t357_position_history')
-            .select('*, brother:t357_brothers(name)')
+            .from('position_history')
+            .select('*, brother:brothers(name)')
             .eq('position_id', positionId)
             .order('start_date', { ascending: false });
 
@@ -38,7 +38,7 @@ export function PositionHistoryDialog({ positionId, positionName }: PositionHist
         } else {
             // Si la tabla no existe, mostrar solo el hermano actual
             const { data: currentBrother } = await supabase
-                .from('t357_brothers')
+                .from('brothers')
                 .select('name')
                 .eq('position_id', positionId)
                 .single();
@@ -124,7 +124,7 @@ export function PositionHistoryDialog({ positionId, positionName }: PositionHist
                     <div className="pt-4 border-t text-sm text-gray-500">
                         <p>
                             <strong>Nota:</strong> Para registrar historial completo, crea la tabla{' '}
-                            <code className="bg-gray-100 px-1 rounded">t357_position_history</code> en Supabase.
+                            <code className="bg-gray-100 px-1 rounded">position_history</code> en Supabase.
                         </p>
                     </div>
                 </div>

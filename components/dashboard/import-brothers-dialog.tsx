@@ -54,7 +54,7 @@ export function ImportBrothersDialog({ onImportComplete }: ImportBrothersDialogP
         try {
             // Obtener posiciones para mapear nombres a IDs
             const { data: positions } = await supabase
-                .from('t357_positions')
+                .from('positions')
                 .select('id, name');
 
             const positionMap = new Map(positions?.map(p => [p.name.toLowerCase(), p.id]) || []);
@@ -69,7 +69,7 @@ export function ImportBrothersDialog({ onImportComplete }: ImportBrothersDialogP
 
             // Insertar en base de datos
             const { error } = await supabase
-                .from('t357_brothers')
+                .from('brothers')
                 .insert(brothersToInsert);
 
             if (error) {

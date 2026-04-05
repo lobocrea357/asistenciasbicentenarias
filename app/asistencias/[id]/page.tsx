@@ -29,7 +29,7 @@ export default function AsistenciasPage() {
     if (!id) return;
     const fetchTenida = async () => {
       const { data } = await supabase
-        .from('t357_meetings')
+        .from('meetings')
         .select('*')
         .eq('id', id)
         .single();
@@ -41,7 +41,7 @@ export default function AsistenciasPage() {
   // Cargar hermanos
   useEffect(() => {
     const fetchHermanos = async () => {
-      const { data } = await supabase.from('t357_brothers').select('*');
+      const { data } = await supabase.from('brothers').select('*');
       setHermanos(data || []);
     };
     fetchHermanos();
@@ -55,8 +55,8 @@ export default function AsistenciasPage() {
 
   const fetchAsistentes = async () => {
     const { data } = await supabase
-      .from('t357_attendances')
-      .select('*, brother:t357_brothers(*)')
+      .from('attendances')
+      .select('*, brother:brothers(*)')
       .eq('meeting_id', id);
     setAsistentes(data || []);
   };
@@ -87,7 +87,7 @@ export default function AsistenciasPage() {
       return;
     }
 
-    await supabase.from('t357_attendances').insert([{
+    await supabase.from('attendances').insert([{
       meeting_id: id,
       brother_id: hermano.id
     }]);
@@ -105,7 +105,7 @@ export default function AsistenciasPage() {
   // Eliminar asistencia
   const eliminarAsistente = async (attendanceId: number, brotherName: string) => {
     const { error } = await supabase
-      .from('t357_attendances')
+      .from('attendances')
       .delete()
       .eq('id', attendanceId);
 

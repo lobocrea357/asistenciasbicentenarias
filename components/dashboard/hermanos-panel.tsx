@@ -25,12 +25,12 @@ export function HermanosPanel() {
   // Cargar hermanos y posiciones
   const fetchData = async () => {
     const { data: brothersData } = await supabase
-      .from('t357_brothers')
-      .select('*, t357_positions(name)')
+      .from('brothers')
+      .select('*, positions(name)')
       .order('name', { ascending: true });
 
     const { data: positionsData } = await supabase
-      .from('t357_positions')
+      .from('positions')
       .select('*')
       .order('name', { ascending: true });
 
@@ -45,7 +45,7 @@ export function HermanosPanel() {
   // Filtros
   const filteredBrothers = brothers.filter(brother => {
     const matchesSearch = brother.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (brother.t357_positions?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
+      (brother.positions?.name?.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesGrade = selectedGrade === 'all' || brother.grade === selectedGrade;
     return matchesSearch && matchesGrade;
   });
@@ -59,14 +59,14 @@ export function HermanosPanel() {
 
   const saveEdit = async (brotherId: number) => {
     await supabase
-      .from('t357_brothers')
+      .from('brothers')
       .update({ grade: editGrade, position_id: editPosition })
       .eq('id', brotherId);
 
     // Refresca datos
     const { data: brothersData } = await supabase
-      .from('t357_brothers')
-      .select('*, t357_positions(name)')
+      .from('brothers')
+      .select('*, positions(name)')
       .order('name', { ascending: true });
     setBrothers(brothersData || []);
     setEditingId(null);
@@ -151,7 +151,7 @@ export function HermanosPanel() {
                 size="sm"
                 onClick={() => exportBrothersToPDF(filteredBrothers.map(b => ({
                   ...b,
-                  position_name: b.t357_positions?.name
+                  position_name: b.positions?.name
                 })))}
               >
                 <FileDown className="h-4 w-4 mr-2" />
@@ -162,7 +162,7 @@ export function HermanosPanel() {
                 size="sm"
                 onClick={() => exportBrothersToExcel(filteredBrothers.map(b => ({
                   ...b,
-                  position_name: b.t357_positions?.name
+                  position_name: b.positions?.name
                 })))}
               >
                 <FileDown className="h-4 w-4 mr-2" />
@@ -252,7 +252,7 @@ export function HermanosPanel() {
                           </SelectContent>
                         </Select>
                       ) : (
-                        brother.t357_positions?.name || '-'
+                        brother.positions?.name || '-'
                       )}
                     </TableCell>
                     <TableCell>

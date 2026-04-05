@@ -32,7 +32,7 @@ export function TenidasPanel() {
   useEffect(() => {
     const fetchTenidas = async () => {
       const { data, error } = await supabase
-        .from('t357_meetings')
+        .from('meetings')
         .select('*')
         .order('date', { ascending: false });
       if (!error) setTenidas(data || []);
@@ -44,7 +44,7 @@ export function TenidasPanel() {
   useEffect(() => {
     const fetchTemples = async () => {
       const { data, error } = await supabase
-        .from('t357_temples')
+        .from('temples')
         .select('*');
       if (!error) setTemples(data || []);
     };
@@ -63,7 +63,7 @@ export function TenidasPanel() {
 
     // No conviertas location a número, solo guarda el valor
     const { data, error } = await supabase
-      .from('t357_meetings')
+      .from('meetings')
       .insert([{
         theme: newTenida.theme,
         date: newTenida.date,
@@ -110,7 +110,7 @@ export function TenidasPanel() {
     }
 
     const { data, error } = await supabase
-      .from('t357_meetings')
+      .from('meetings')
       .update({
         theme: editTenida.theme,
         date: editTenida.date,

@@ -27,13 +27,13 @@ export function CuadroLogialPanel() {
     const fetchData = async () => {
         // Obtener todas las posiciones
         const { data: positionsData } = await supabase
-            .from('t357_positions')
+            .from('positions')
             .select('*')
             .order('name', { ascending: true });
 
         // Obtener todos los hermanos
         const { data: brothersData } = await supabase
-            .from('t357_brothers')
+            .from('brothers')
             .select('*')
             .order('name', { ascending: true });
 
@@ -52,14 +52,14 @@ export function CuadroLogialPanel() {
     const saveEdit = async (positionId: number) => {
         // Primero, quitar el cargo del hermano anterior que lo tenía
         await supabase
-            .from('t357_brothers')
+            .from('brothers')
             .update({ position_id: null })
             .eq('position_id', positionId);
 
         // Luego, asignar el cargo al nuevo hermano (si se seleccionó uno)
         if (editBrotherId) {
             await supabase
-                .from('t357_brothers')
+                .from('brothers')
                 .update({ position_id: positionId })
                 .eq('id', editBrotherId);
         }

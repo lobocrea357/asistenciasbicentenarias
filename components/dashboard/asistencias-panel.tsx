@@ -30,7 +30,7 @@ export function AsistenciasPanel() {
 
     // Obtener todas las tenidas
     const { data: meetingsData, error: meetingsError } = await supabase
-      .from('t357_meetings')
+      .from('meetings')
       .select('*');
 
     if (summaryError) {

@@ -16,8 +16,8 @@ export function DashboardOverview() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const { data: brothersData } = await supabase.from('t357_brothers').select('*');
-      const { data: meetingsData } = await supabase.from('t357_meetings').select('*');
+      const { data: brothersData } = await supabase.from('brothers').select('*');
+      const { data: meetingsData } = await supabase.from('meetings').select('*');
       // Asume que tienes la función RPC para el resumen de asistencias
       const { data: attendanceData } = await supabase.rpc('get_brother_attendance_summary');
       setBrothers(brothersData || []);
