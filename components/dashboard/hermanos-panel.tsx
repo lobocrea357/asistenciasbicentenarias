@@ -14,6 +14,7 @@ import { exportBrothersToPDF, exportBrothersToExcel } from '@/lib/export-utils';
 import { ImportBrothersDialog } from './import-brothers-dialog';
 import { generateNiEntreDichoNiPenado } from '@/lib/pdf-generator';
 import { Brother } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 
 export function HermanosPanel() {
@@ -24,6 +25,7 @@ export function HermanosPanel() {
   const [editPosition, setEditPosition] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
+  const { toast } = useToast();
 
   // Cargar hermanos y posiciones
   const fetchData = async () => {
@@ -88,10 +90,14 @@ export function HermanosPanel() {
     // Implementación futura
 
     const vm = brothers.find(b => b.position_id === 1);
-    
-    console.log(brothers);
+    const secretario = brothers.find(b => b.position_id === 5);
+    const oradorFiscal = brothers.find(b => b.position_id === 6);
 
-
+    await generateNiEntreDichoNiPenado(brother, vm, secretario, oradorFiscal);
+    toast({
+      title: "Ni entre dicho ni penado generado",
+      description: "El PDF ha sido descargado exitosamente",
+    });
   };
 
   // Utilidades visuales (puedes mantener las que ya tienes)

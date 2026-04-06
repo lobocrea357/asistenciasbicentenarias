@@ -132,7 +132,7 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
 
 
 
-export const generateNiEntreDichoNiPenado = async (brother: Brother, secretary: Brother, vm: Brother, fiscalSpeaker: Brother) => {
+export const generateNiEntreDichoNiPenado = async (brother: any, secretary: any, vm: any, fiscalSpeaker: any) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const centerX = pageWidth / 2;
@@ -217,7 +217,7 @@ export const generateNiEntreDichoNiPenado = async (brother: Brother, secretary: 
 
   doc.setFont('times', 'normal');
   doc.setFontSize(11);
-  doc.text(vm.name, centerX, vmSignatureY + 6, { align: 'center' });
+  doc.text(`${vm.name} ${vm.last_name}`, centerX, vmSignatureY + 6, { align: 'center' });
   doc.setFont('times', 'bold');
   doc.text('V:.M:.', centerX, vmSignatureY + 12, { align: 'center' });
 
@@ -233,13 +233,13 @@ export const generateNiEntreDichoNiPenado = async (brother: Brother, secretary: 
   }
 
   doc.setFont('times', 'bold');
-  doc.text(secretary.name, leftX, bottomSignY + 6, { align: 'center' });
+  doc.text(`${secretary.name} ${secretary.last_name}`, leftX, bottomSignY + 6, { align: 'center' });
   doc.text('Sec:. GG:. SS:. y TT:.', leftX, bottomSignY + 12, { align: 'center' });
 
   doc.setFont('times', 'normal');
   doc.text('_________________________', rightX, bottomSignY, { align: 'center' });
   doc.setFont('times', 'bold');
-  doc.text(fiscalSpeaker.name, rightX, bottomSignY + 6, { align: 'center' });
+  doc.text(`${fiscalSpeaker.name} ${fiscalSpeaker.last_name}`, rightX, bottomSignY + 6, { align: 'center' });
   doc.text('Or:. Fiscal', rightX, bottomSignY + 12, { align: 'center' });
 
   const safeName = brother.name
