@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, Filter, Users, Crown, Award, Star, FileDown } from 'lucide-react';
 import { exportBrothersToPDF, exportBrothersToExcel } from '@/lib/export-utils';
 import { ImportBrothersDialog } from './import-brothers-dialog';
@@ -16,6 +18,12 @@ import { generateNiEntreDichoNiPenado } from '@/lib/pdf-generator';
 import { Brother } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
+export interface UserStatus {
+    id:          number;
+    created_at:  Date;
+    name:        string;
+    description: null;
+}
 
 export function HermanosPanel() {
   const [brothers, setBrothers] = useState<any[]>([]);
@@ -24,7 +32,13 @@ export function HermanosPanel() {
   const [editGrade, setEditGrade] = useState('');
   const [editPosition, setEditPosition] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [userStatuses, setUserStatuses] = useState<UserStatus[]>([]);
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [selectedBrotherForStatus, setSelectedBrotherForStatus] = useState<any | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState('Activo');
+  const hasFetchedRef = useRef(false);
   const { toast } = useToast();
 
   // Cargar hermanos y posiciones
@@ -38,12 +52,20 @@ export function HermanosPanel() {
       .from('positions')
       .select('*')
       .order('name', { ascending: true });
-
+    
+    const { data: usersStatus } = await supabase
+      .from('users_status')
+      .select('*')
+      .order('name', { ascending: true });
+      
     setBrothers(brothersData || []);
     setPositions(positionsData || []);
+    setUserStatuses(usersStatus || []);
   };
 
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchData();
   }, []);
 
@@ -98,6 +120,66 @@ export function HermanosPanel() {
       title: "Ni entre dicho ni penado generado",
       description: "El PDF ha sido descargado exitosamente",
     });
+  };
+
+  const openStatusModal = (brother: any) => {
+    setSelectedBrotherForStatus(brother);
+    setSelectedStatus(brother.status || 'Activo');
+    setStatusModalOpen(true);
+  };
+
+  const handleChangeStatus = async () => {
+    if (!selectedBrotherForStatus) return;
+
+    const selectedStatusRecord = userStatuses.find((status) => status.name === selectedStatus);
+    if (!selectedStatusRecord) {
+      toast({
+        title: 'Estatus inválido',
+        description: 'No se encontró el estatus seleccionado en users_status.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!selectedBrotherForStatus.user_id) {
+      toast({
+        title: 'No se puede actualizar',
+        description: 'El hermano no tiene user_id para vincular perfil.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setStatusLoading(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ state_id: selectedStatusRecord.id })
+      .eq('id', selectedBrotherForStatus.user_id);
+
+    if (error) {
+      toast({
+        title: 'Error al cambiar estatus',
+        description: error.message,
+        variant: 'destructive'
+      });
+      setStatusLoading(false);
+      return;
+    }
+
+    setBrothers((prev) => prev.map((b) => (
+      b.id === selectedBrotherForStatus.id
+        ? { ...b, status: selectedStatus, state_id: selectedStatusRecord.id }
+        : b
+    )));
+
+    toast({
+      title: 'Estatus actualizado',
+      description: `${selectedBrotherForStatus.name} ahora está como ${selectedStatus}`,
+    });
+
+    setStatusLoading(false);
+    setStatusModalOpen(false);
+    setSelectedBrotherForStatus(null);
   };
 
   // Utilidades visuales (puedes mantener las que ya tienes)
@@ -284,7 +366,7 @@ export function HermanosPanel() {
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" onClick={() => startEdit(brother)}>Editar</Button>
                           <Button size="sm" variant="outline" className='bg-emerald-800 text-white' onClick={() => handleDownloadNiEntreDichoNiPenado(brother)}>No entre dicho ni penado</Button>
-                          <Button size="sm" variant="outline" className='bg-blue-600 text-white'>Cambiar Estatus</Button>
+                          <Button size="sm" variant="outline" className='bg-blue-600 text-white' onClick={() => openStatusModal(brother)}>Cambiar Estatus</Button>
                         </div>
                       )}
                     </TableCell>
@@ -295,6 +377,43 @@ export function HermanosPanel() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={statusModalOpen} onOpenChange={setStatusModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cambiar estatus</DialogTitle>
+            <DialogDescription>
+              {selectedBrotherForStatus
+                ? `Selecciona el nuevo estatus para ${selectedBrotherForStatus.name}.`
+                : 'Selecciona el nuevo estatus del hermano.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-2">
+            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona estatus" />
+              </SelectTrigger>
+              <SelectContent>
+                {userStatuses.map((status) => (
+                  <SelectItem key={status.id} value={status.name}>
+                    {status.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStatusModalOpen(false)} disabled={statusLoading}>
+              Cancelar
+            </Button>
+            <Button onClick={handleChangeStatus} disabled={statusLoading}>
+              {statusLoading ? 'Guardando...' : 'Guardar estatus'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
