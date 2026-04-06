@@ -1,5 +1,30 @@
 # Changelog - Asistencias Bicentenarias
 
+## [2026-04-05] - Fix: Cambio de estatus en modal de Hermanos
+
+### Problema
+
+El botón `Cambiar Estatus` abría el modal, pero la actualización estaba apuntando a `brothers.status`, campo que no corresponde al esquema actual.
+
+### Causa
+
+En el esquema actual, el estatus del usuario se maneja en `profiles.state_id`, relacionado con `users_status.id` y enlazado al hermano por `brothers.user_id`.
+
+### Solución
+
+- Se cambió la actualización a:
+  - Tabla destino: `profiles`
+  - Campo actualizado: `state_id`
+  - Filtro: `profiles.id = brothers.user_id`
+- Se agregaron validaciones en el flujo:
+  - Si no existe el estatus seleccionado en `users_status`.
+  - Si el hermano no tiene `user_id` asociado.
+- El selector del modal ahora carga opciones dinámicas desde `users_status`.
+
+### Resultado
+
+El modal de `Cambiar Estatus` ahora persiste correctamente el nuevo estatus según el modelo real de la base de datos.
+
 ## [2026-04-05] - Fix: Supabase RLS (Row Level Security) - Empty Data Response
 
 ### Problema
