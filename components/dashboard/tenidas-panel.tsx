@@ -1,6 +1,6 @@
 
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,17 +17,32 @@ import { useToast } from '@/hooks/use-toast';
 export function TenidasPanel() {
   const [tenidas, setTenidas] = useState<any[]>([]);
   const [temples, setTemples] = useState<any[]>([]); // <-- Agrega este estado
+  const [meetingTypes, setMeetingTypes] = useState<any[]>([]); // <-- Agrega este estado
+  const [meetingSubTypes, setMeetingSubTypes] = useState<any[]>([]); // <-- Agrega este estado
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [newTenida, setNewTenida] = useState({
     theme: '',
     date: '',
     location: '',
     type: '' as 'Conjunta' | 'Ordinaria' | 'Extraordinaria' | '',
+    subType: '' as 'Conjunta' | 'Ordinaria' | 'Extraordinaria' | '',
     grade: '' as 'Aprendiz' | 'Compañero' | 'Maestro' | ''
   });
   const [editTenida, setEditTenida] = useState<any | null>(null);
   const { toast } = useToast();
+  const fetchDataTypeRef = useRef(false);
 
+  const fetchDataType= async () => {
+    const { data, error } = await supabase
+      .from('meeting_type')
+      .select('*');
+
+    const {data: subType, error: subTypeError} = await supabase.from('meetings_subtype').select('*');
+
+    
+    if (!error) setMeetingTypes(data || []);
+    if (!subTypeError) setMeetingSubTypes(subType || []);
+  };
   // Leer tenidas desde Supabase
   useEffect(() => {
     const fetchTenidas = async () => {
@@ -38,6 +53,14 @@ export function TenidasPanel() {
       if (!error) setTenidas(data || []);
     };
     fetchTenidas();
+  }, []);
+
+  // Leer tipos de tenida desde Supabase
+  useEffect(() => {
+    if (!fetchDataTypeRef.current) {
+      fetchDataType();
+      fetchDataTypeRef.current = true;
+    }
   }, []);
 
   // Leer templos desde Supabase
@@ -69,6 +92,7 @@ export function TenidasPanel() {
         date: newTenida.date,
         location: newTenida.location,
         type: newTenida.type,
+        subtype: newTenida.subType,
         grade: newTenida.grade
       }])
       .select()
@@ -89,6 +113,7 @@ export function TenidasPanel() {
       date: '',
       location: '',
       type: '',
+      subType: '',
       grade: ''
     });
     setIsDialogOpen(false);
@@ -116,6 +141,7 @@ export function TenidasPanel() {
         date: editTenida.date,
         location: editTenida.location,
         type: editTenida.type,
+        subtype: editTenida.subType ?? editTenida.subtype,
         grade: editTenida.grade
       })
       .eq('id', editTenida.id)
@@ -223,9 +249,33 @@ export function TenidasPanel() {
                     <SelectValue placeholder="Selecciona el tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Ordinaria">Ordinaria</SelectItem>
-                    <SelectItem value="Extraordinaria">Extraordinaria</SelectItem>
-                    <SelectItem value="Conjunta">Conjunta</SelectItem>
+                    {meetingTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.name || type.type}>
+                        {type.name || type.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Subtipo de Tenida</Label>
+                <Select
+                  value={newTenida.subType}
+                  onValueChange={(value) => setNewTenida({
+                    ...newTenida,
+                    subType: value as any,
+                    location: '' // Limpiar lugar al cambiar tipo
+                  })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona el subtipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {meetingSubTypes.map((subType) => (
+                      <SelectItem key={subType.id} value={subType.name || subType.type}>
+                        {subType.name || subType.type}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

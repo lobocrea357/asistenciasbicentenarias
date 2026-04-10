@@ -1,6 +1,11 @@
 import jsPDF from 'jspdf';
 import { Brother, Tenida } from './data';
 
+type TenidaWithSubType = Tenida & {
+  subType?: string;
+  subtype?: string;
+};
+
 const loadImage = (src: string): Promise<HTMLImageElement> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -8,6 +13,27 @@ const loadImage = (src: string): Promise<HTMLImageElement> => {
     img.onload = () => resolve(img);
     img.onerror = (e) => reject(e);
   });
+};
+
+const normalizeText = (value: string) => value
+  .trim()
+  .toLowerCase()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '');
+
+const buildTenidaDescription = (tenida: TenidaWithSubType) => {
+  const type = tenida.type?.toLowerCase() || 'ordinaria';
+  const grade = tenida.grade?.toLowerCase() || '';
+  const subType = (tenida.subType || tenida.subtype || '').trim();
+
+  if (!subType || normalizeText(subType) === normalizeText(type)) {
+    return `Tenida ${type} en grado de ${grade}`;
+  }
+
+  const subTypeNeedsDe = new Set(['iniciacion', 'aumento de salario', 'exaltacion']);
+  const separator = subTypeNeedsDe.has(normalizeText(subType)) ? ' de ' : ' ';
+
+  return `Tenida ${type} en grado de ${grade}${separator}${subType}`;
 };
 
 export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string) => {
@@ -75,7 +101,8 @@ export const generateConvocatoriaPDF = async (tenida: Tenida, templeName: string
   const tenidaDate = new Date(tenida.date + 'T00:00:00');
   const tenidaDateStr = tenidaDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  const bodyText = `Convocatoria: De parte del V:.M:. Gerardo Enrique Pena Barrera y su cuadro logial, se os convoca para el proximo ${tenidaDateStr}, a una Tenida ${tenida.type} en el Grado de ${tenida.grade} comenzara a las 06:30 p m (En punto) en nuestro templo ubicado en la Urb. Campo Alegre, calle el parque Casa n° 112- A- 25 Al Or:. de Valencia Edo. Carabobo.`;
+  const tenidaDescription = buildTenidaDescription(tenida as TenidaWithSubType);
+  const bodyText = `Convocatoria: De parte del V:.M:. Gerardo Enrique Pena Barrera y su cuadro logial, se os convoca para el proximo ${tenidaDateStr}, a una ${tenidaDescription} comenzara a las 06:30 p m (En punto) en nuestro templo ubicado en la Urb. Campo Alegre, calle el parque Casa n° 112- A- 25 Al Or:. de Valencia Edo. Carabobo.`;
 
   const bodyLines = doc.splitTextToSize(bodyText, contentWidth);
   bodyLines.forEach((line: string) => {

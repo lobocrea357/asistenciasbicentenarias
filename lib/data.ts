@@ -15,6 +15,7 @@ export interface Tenida {
   date: string;
   location: string;
   type: 'Conjunta' | 'Ordinaria' | 'Extraordinaria';
+  subType?: 'Conjunta' | 'Ordinaria' | 'Extraordinaria';
   grade: 'Aprendiz' | 'Compañero' | 'Maestro';
   createdAt: string;
 }
@@ -147,6 +148,7 @@ export const mockTenidas: Tenida[] = [
     date: '2024-02-05',
     location: 'Templo Principal - Caracas',
     type: 'Extraordinaria',
+    subType: 'Extraordinaria',
     grade: 'Maestro',
     createdAt: '2024-01-30'
   },
@@ -156,6 +158,7 @@ export const mockTenidas: Tenida[] = [
     date: '2024-02-12',
     location: 'Templo Principal - Caracas',
     type: 'Ordinaria',
+    subType: 'Ordinaria',
     grade: 'Compañero',
     createdAt: '2024-02-07'
   },
@@ -165,6 +168,7 @@ export const mockTenidas: Tenida[] = [
     date: '2024-02-19',
     location: 'Templo Principal - Caracas',
     type: 'Ordinaria',
+    subType: 'Ordinaria',
     grade: 'Maestro',
     createdAt: '2024-02-14'
   }
