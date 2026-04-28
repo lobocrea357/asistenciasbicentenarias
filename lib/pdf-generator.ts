@@ -166,6 +166,7 @@ export const generateNiEntreDichoNiPenado = async (brother: any, secretary: any,
   const margin = 20;
   const contentWidth = pageWidth - (margin * 2);
 
+
   const currentDate = new Date();
   const months = [
     'enero',
@@ -227,7 +228,7 @@ export const generateNiEntreDichoNiPenado = async (brother: any, secretary: any,
 
   yPos += 12;
   doc.setFont('times', 'normal');
-  const bodyText = `En nombre de la Respetable Logia Caballeros del Sol de Carabobo N° 269 se hace constar que nuestro Q:. H:. ${brother.name.toUpperCase()}, cédula de identidad V-${brotherCedula} y miembro activo de este Respetable Taller se encuentra libre de cualquier proceso administrativo y no se encuentra NI ENTRE DICHO NI PENADO, permaneciendo con una labor en Logia encomiable de su título masónico.`;
+  const bodyText = `En nombre de la Respetable Logia Caballeros del Sol de Carabobo N° 269 se hace constar que nuestro Q:. H:. ${brother.name.toUpperCase()} ${brother.last_name.toUpperCase()}, cédula de identidad V-${brotherCedula} y miembro activo de este Respetable Taller se encuentra libre de cualquier proceso administrativo y no se encuentra NI ENTRE DICHO NI PENADO, permaneciendo con una labor en Logia encomiable de su título masónico.`;
   const bodyLines = doc.splitTextToSize(bodyText, contentWidth);
   bodyLines.forEach((line: string) => {
     doc.text(line, margin, yPos);
