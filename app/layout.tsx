@@ -6,8 +6,8 @@ import { ThemeProvider } from '@/components/theme-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Dashboard Logia - Caballeros del Sol de Carabobo N° 669',
-  description: 'Sistema de gestión para la Resp∴ Log∴ Caballeros del Sol de Carabobo N° 669',
+  title: 'Dashboard Logia - Caballeros del Sol de Carabobo N° 269',
+  description: 'Sistema de gestión para la Resp∴ Log∴ Caballeros del Sol de Carabobo N° 269',
 };
 
 export default function RootLayout({

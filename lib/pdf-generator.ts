@@ -263,6 +263,13 @@ export const generateNiEntreDichoNiPenado = async (brother: any, secretary: any,
   doc.text(`${secretary.name} ${secretary.last_name}`, leftX, bottomSignY + 6, { align: 'center' });
   doc.text('Sec:. GG:. SS:. y TT:.', leftX, bottomSignY + 12, { align: 'center' });
 
+  try {
+    const oradorFiscalSignature = await loadImage('/firma-orafis.png');
+    doc.addImage(oradorFiscalSignature, 'PNG', rightX - 20, bottomSignY - 20, 40, 18, undefined, 'FAST');
+  } catch (error) {
+    console.error('Error cargando firma del orador fiscal', error);
+  }
+
   doc.setFont('times', 'normal');
   doc.text('_________________________', rightX, bottomSignY, { align: 'center' });
   doc.setFont('times', 'bold');
