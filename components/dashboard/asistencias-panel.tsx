@@ -12,6 +12,7 @@ import { UserCheck, TrendingUp, TrendingDown, Minus, Edit, Save, X, FileDown } f
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { exportAttendanceToPDF, exportAttendanceToExcel } from '@/lib/export-utils';
+import { ImportAttendancesDialog } from '@/components/dashboard/import-attendances-dialog';
 
 export function AsistenciasPanel() {
   const [selectedGrade, setSelectedGrade] = useState<string>('all');
@@ -220,7 +221,8 @@ export function AsistenciasPanel() {
                 {selectedGrade !== 'all' && ` - Grado ${selectedGrade}`}
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <ImportAttendancesDialog onImportComplete={fetchData} />
               <Button
                 variant="outline"
                 size="sm"
